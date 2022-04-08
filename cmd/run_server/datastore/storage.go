@@ -1,4 +1,4 @@
-package main
+package datastore
 
 import (
 	"errors"
@@ -10,13 +10,14 @@ type Storage struct{
 	db map[string]bool
 }
 
-func NewStorage() *Storage{
+func NewStorage() *Storage {
 	m := make(map[string]bool)
 	return &Storage{
 		db: m,
 	}
 }
 
+// AddItem creates a new object in storage.
 func (s *Storage) AddItem(in string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -28,6 +29,7 @@ func (s *Storage) AddItem(in string) error {
 	return nil
 }
 
+// GetItem returns a matching object from storage.
 func (s *Storage) GetItem(key string) (string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -39,6 +41,7 @@ func (s *Storage) GetItem(key string) (string, error) {
 	return key, nil
 }
 
+// RemoveItem deletes the corresponding object from storage.
 func (s *Storage) RemoveItem(key string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -56,6 +59,7 @@ func (s *Storage) RemoveItem(key string) error {
 	return nil
 }
 
+// ListItems returns all objects in storage.
 func (s *Storage) ListItems() ([]string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

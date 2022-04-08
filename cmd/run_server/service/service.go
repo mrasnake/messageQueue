@@ -1,8 +1,9 @@
-package main
+package service
 
 import (
 	"fmt"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/mrasnake/messageQueue/cmd/run_server/datastore"
 	"os"
 	"strings"
 	"sync"
@@ -10,12 +11,12 @@ import (
 
 type ItemService struct{
 	mu sync.Mutex
-	storage *Storage
+	storage *datastore.Storage
 	logs *os.File
 }
 
 func NewService(l string) (*ItemService, error) {
-	store := NewStorage()
+	store := datastore.NewStorage()
 	f, err := os.OpenFile( l, os.O_CREATE | os.O_WRONLY, 0777)
 	if err != nil{
 		return nil, fmt.Errorf("unable to open logfile: %w", err)
@@ -27,6 +28,7 @@ func NewService(l string) (*ItemService, error) {
 	return out, nil
 }
 
+// WriteLog is a service layer helper function that writes messages to the logfile.
 func (i *ItemService) WriteLog(msg string){
 	i.mu.Lock()
 	defer i.mu.Unlock()
@@ -35,6 +37,8 @@ func (i *ItemService) WriteLog(msg string){
 	return
 }
 
+// ProcessMassage works much like a router, reading in the request type
+// and routing it to the appropriate service layer function.
 func (i *ItemService) ProcessMessage(in []byte){
 
 	s := strings.Fields(string(in))
@@ -107,6 +111,8 @@ func (r RemoveItemRequest) Validate() error {
 	)
 }
 
+// Service layer functions validates the request data and
+// calls the appropriate storage layer functions.
 func (i *ItemService) AddItem(req *AddItemRequest) error{
 	if err := req.Validate(); err != nil {
 		return fmt.Errorf("invalid request: %w", err)

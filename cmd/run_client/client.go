@@ -14,6 +14,7 @@ type service struct {
 	QueueName string
 }
 
+// defineSettings gathers the configurations and creates the service object.
 func DefineService(ctx *cli.Context) *service {
 	out := &service{
 		RequestFile: ctx.String("file"),
@@ -23,7 +24,8 @@ func DefineService(ctx *cli.Context) *service {
 	return out
 }
 
-
+// Run sets up the message queue and runs the client
+// sending requests through the queue to the server.
 func (s *service) Run() error{
 
 	conn, err := amqp.Dial(s.QueueConn)
@@ -63,7 +65,7 @@ func (s *service) Run() error{
 	return nil
 }
 
-
+// getLines opens the file with list of requests and
 func (s *service) getLines() ([]string, error){
 	file, err := os.Open(s.RequestFile)
 	if err != nil {
@@ -83,6 +85,7 @@ func (s *service) getLines() ([]string, error){
 	return out, nil
 }
 
+// sendMessage publishes the request to the sever via the queue.
 func sendMessage(msg string, queue amqp.Queue, channal *amqp.Channel) error {
 
 	err := channal.Publish(

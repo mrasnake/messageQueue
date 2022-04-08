@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/mrasnake/messageQueue/cmd/run_server/transport"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
 	"time"
 )
 
+
+// main takes all build flags or environment variables, defines
+// the configuration and runs the server.
 func main() {
 
 	app := cli.NewApp()
@@ -36,10 +40,9 @@ func main() {
 		},
 	}
 
-	// action is defined in main to allow for more effective unit testing.
 	app.Action = func(ctx *cli.Context) error {
 
-		service := defineSettings(ctx)
+		service := transport.defineSettings(ctx)
 
 		if err := service.Run(); err != nil {
 			return fmt.Errorf("could not start service %w", err)

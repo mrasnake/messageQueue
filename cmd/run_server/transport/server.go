@@ -1,7 +1,8 @@
-package main
+package transport
 
 import (
 	"fmt"
+	"github.com/mrasnake/messageQueue/cmd/run_server/service"
 	"github.com/streadway/amqp"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -19,7 +20,8 @@ type Message struct{
 	Value string `json:"value"`
 }
 
-func defineSettings(ctx *cli.Context) *server{
+// defineSettings gathers the configurations and creates the server object.
+func defineSettings(ctx *cli.Context) *server {
 
 	out := &server{
 		QueueConn: ctx.String("connection"),
@@ -29,7 +31,7 @@ func defineSettings(ctx *cli.Context) *server{
 	return out
 }
 
-
+// Run sets up the message queue and runs the server waiting for requests.
 func (s *server) Run() error{
 	conn, err := amqp.Dial(s.QueueConn)
 	if err != nil {
@@ -68,7 +70,7 @@ func (s *server) Run() error{
 		return fmt.Errorf("unable to declare consumer: %w", err)
 	}
 
-	svr, err := NewService(s.LogFileName)
+	svr, err := service.NewService(s.LogFileName)
 	if err != nil{
 		return fmt.Errorf("service not created: %w", err)
 	}

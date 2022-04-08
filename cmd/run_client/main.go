@@ -8,11 +8,13 @@ import(
 	"os"
 )
 
+// main takes all build flags or environment variables, defines
+// the configuration and runs the client.
 func main() {
 
 	app := cli.NewApp()
 	app.Name = "client"
-	app.Usage = "instanciate a new client to make requests"
+	app.Usage = "instantiate a new client to make requests"
 	app.Version = "1.0.0"
 
 	app.Flags = []cli.Flag{
@@ -36,7 +38,6 @@ func main() {
 
 	}
 
-	// action is defined in main to allow for more effective unit testing.
 	app.Action = func(ctx *cli.Context) error {
 
 		service := DefineService(ctx)
