@@ -2,51 +2,53 @@ package service
 
 import (
 	"fmt"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/mrasnake/messageQueue/cmd/run_server/datastore"
 	"os"
 	"strings"
 	"sync"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/mrasnake/messageQueue/cmd/run_server/datastore"
 )
 
-type ItemService struct{
-	mu sync.Mutex
+type ItemService struct {
+	mu      sync.Mutex
 	storage *datastore.Storage
-	logs *os.File
+	logs    *os.File
 }
 
+// NewService accepts a logfile name, then creates and returns a Service instance.
 func NewService(l string) (*ItemService, error) {
 	store := datastore.NewStorage()
-	f, err := os.OpenFile( l, os.O_CREATE | os.O_WRONLY, 0777)
-	if err != nil{
+	f, err := os.OpenFile(l, os.O_CREATE|os.O_WRONLY, 0777)
+	if err != nil {
 		return nil, fmt.Errorf("unable to open logfile: %w", err)
 	}
 	out := &ItemService{
 		storage: store,
-		logs: f,
+		logs:    f,
 	}
 	return out, nil
 }
 
 // WriteLog is a service layer helper function that writes messages to the logfile.
-func (i *ItemService) WriteLog(msg string){
+func (i *ItemService) WriteLog(msg string) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
-	fmt.Fprintf( i.logs, "Found value: %v\n", msg )
+	fmt.Fprintf(i.logs, "Found value: %v\n", msg)
 	return
 }
 
 // ProcessMassage works much like a router, reading in the request type
 // and routing it to the appropriate service layer function.
-func (i *ItemService) ProcessMessage(in []byte){
+func (i *ItemService) ProcessMessage(in []byte) {
 
 	s := strings.Fields(string(in))
 	switch s[0] {
 	case "ADD_ITEM":
 		if err := i.AddItem(&AddItemRequest{
 			Value: s[1],
-		}); err != nil{
+		}); err != nil {
 			fmt.Printf("failed to process message %v: %v\n", s[0], err.Error())
 		}
 	case "GET_ITEM":
@@ -61,7 +63,7 @@ func (i *ItemService) ProcessMessage(in []byte){
 	case "REMOVE_ITEM":
 		if err := i.RemoveItem(&RemoveItemRequest{
 			Value: s[1],
-		}); err != nil{
+		}); err != nil {
 			fmt.Printf("failed to process message %v: %v\n", s[0], err.Error())
 		}
 	case "GET_ALL_ITEMS":
@@ -80,6 +82,8 @@ func (i *ItemService) ProcessMessage(in []byte){
 
 	return
 }
+
+// Service layer request objects and corresponding validation functions.
 
 type AddItemRequest struct {
 	Value string
@@ -113,7 +117,7 @@ func (r RemoveItemRequest) Validate() error {
 
 // Service layer functions validates the request data and
 // calls the appropriate storage layer functions.
-func (i *ItemService) AddItem(req *AddItemRequest) error{
+func (i *ItemService) AddItem(req *AddItemRequest) error {
 	if err := req.Validate(); err != nil {
 		return fmt.Errorf("invalid request: %w", err)
 	}
@@ -121,7 +125,7 @@ func (i *ItemService) AddItem(req *AddItemRequest) error{
 	return i.storage.AddItem(req.Value)
 }
 
-func (i *ItemService) GetItem(req *GetItemRequest) (string, error){
+func (i *ItemService) GetItem(req *GetItemRequest) (string, error) {
 	if err := req.Validate(); err != nil {
 		return "", fmt.Errorf("invalid request: %w", err)
 	}
@@ -129,7 +133,7 @@ func (i *ItemService) GetItem(req *GetItemRequest) (string, error){
 	return i.storage.GetItem(req.Value)
 }
 
-func (i *ItemService) RemoveItem(req *RemoveItemRequest) error{
+func (i *ItemService) RemoveItem(req *RemoveItemRequest) error {
 	if err := req.Validate(); err != nil {
 		return fmt.Errorf("invalid request: %w", err)
 	}
@@ -137,6 +141,6 @@ func (i *ItemService) RemoveItem(req *RemoveItemRequest) error{
 	return i.storage.RemoveItem(req.Value)
 }
 
-func (i *ItemService) ListItems() ([]string, error){
+func (i *ItemService) ListItems() ([]string, error) {
 	return i.storage.ListItems()
 }

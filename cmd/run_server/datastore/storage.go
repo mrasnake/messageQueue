@@ -5,11 +5,13 @@ import (
 	"sync"
 )
 
-type Storage struct{
+// Storage represents local runtime storage.
+type Storage struct {
 	mu sync.RWMutex
 	db map[string]bool
 }
 
+// NewStorage implements and new storage object.
 func NewStorage() *Storage {
 	m := make(map[string]bool)
 	return &Storage{
@@ -23,7 +25,7 @@ func (s *Storage) AddItem(in string) error {
 	defer s.mu.Unlock()
 
 	s.db[in] = true
-	if !s.db[in]{
+	if !s.db[in] {
 		return errors.New("item not added")
 	}
 	return nil
@@ -35,7 +37,7 @@ func (s *Storage) GetItem(key string) (string, error) {
 	defer s.mu.RUnlock()
 
 	val, ok := s.db[key]
-	if !ok || !val{
+	if !ok || !val {
 		return "", errors.New("unable to get item")
 	}
 	return key, nil
@@ -47,13 +49,13 @@ func (s *Storage) RemoveItem(key string) error {
 	defer s.mu.Unlock()
 
 	val, ok := s.db[key]
-	if !ok || !val{
+	if !ok || !val {
 		return errors.New("cannot remove item that does not exist")
 	}
 
 	delete(s.db, key)
 	val, ok = s.db[key]
-	if ok || val{
+	if ok || val {
 		return errors.New("unable to remove item")
 	}
 	return nil
@@ -68,7 +70,7 @@ func (s *Storage) ListItems() ([]string, error) {
 	for k := range s.db {
 		keys = append(keys, k)
 	}
-	if len(keys) < 1{
+	if len(keys) < 1 {
 		return nil, errors.New("no items to list")
 	}
 	return keys, nil
